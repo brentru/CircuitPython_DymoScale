@@ -63,10 +63,6 @@ class Scale:
         self.units_pin = DigitalInOut(units_pin)
         self.units_pin.switch_to_output()
         self.dymo = PulseIn(usb_pin, maxlen=96, idle_state=True)
-        try:
-            self.check_scale()
-        except RuntimeError:
-            raise RuntimeError("Failed to inititalize the scale, is the scale on?")
         # units we're measuring
         self.units = None
         # is the measurement stable?
