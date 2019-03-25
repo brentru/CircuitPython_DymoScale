@@ -52,18 +52,16 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_scale.git"
 class Scale:
     """Interface to a DYMO postal scale.
     """
-    def __init__(self, usb_pin, weight_pin, timeout=1.0):
+    def __init__(self, usb_pin, units_pin, timeout=1.0):
         """Sets up a DYMO postal scale.
         :param ~pulseio.PulseIn usb_pin: The usb data pin from the Dymo scale.
-        :param ~digitalio.DigitalInOut weight_pin: The grams/oz pin from the Dymo scale.
+        :param ~digitalio.DigitalInOut units_pin: The grams/oz pin from the Dymo scale.
         :param double timeout: The timeout, in seconds.
         """
         self.timeout = timeout
         # set up the toggle pin
-        self.toggle_pin = DigitalInOut(weight_pin)
-        self.toggle_pin.switch_to_output()
-        self.toggle_pin.value = 1
-        self.toggle_pin.value = 0
+        self.units_pin = DigitalInOut(units_pin)
+        self.units_pin.switch_to_output()
         self.dymo = PulseIn(usb_pin, maxlen=96, idle_state=True)
         try:
             self.check_scale()
@@ -75,6 +73,13 @@ class Scale:
         self.stable = None
         # the weight of what we're measuring
         self.weight = None
+
+    def toggle_unit_pin(self):
+        """Toggles the units button to prevent auto shut-off.
+        """
+        self.units_pin.value = 1
+        time.sleep(2)
+        self.units_pin.value = 0
 
     def check_scale(self):
         """Checks for data from the scale.
@@ -126,13 +131,12 @@ class Scale:
         self.weight = data_bytes[5] + (data_bytes[6] << 8)
         if data_bytes[2] & 0x1:
             self.weight *= -1
+            print('Negative number, press the tare button to reset the scale to zero.')
         if self.units == OUNCES:
             if data_bytes[4] & 0x80:
                 data_bytes[4] -= 0x100
+                print('Negative number, press the tare button to reset the scale to zero.')
             self.weight *= 10 ** data_bytes[4]
             self.units = "oz"
         if self.units == GRAMS:
             self.units = "g"
-        # toggle the g/oz pin
-        self.toggle_pin.value = 1
-        self.toggle_pin.value = 0
