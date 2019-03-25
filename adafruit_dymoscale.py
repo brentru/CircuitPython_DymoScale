@@ -80,14 +80,17 @@ class Scale:
             self.units_pin.value = 0
             time.sleep(2)
         else: # toggle and preserve current unit state
+            #pylint-ignore unused-variable
             for toggle in range(2):
                 self.units_pin.value = 1
                 time.sleep(2)
                 self.units_pin.value = 0
                 time.sleep(2)
 
-    def check_scale(self):
-        """Checks for data from the scale.
+
+    def get_scale_data(self):
+        """Read a pulse of SPI data on a pin that corresponds to DYMO scale
+        output protocol (12 bytes of data at about 14KHz), timeout is in seconds
         """
         timestamp = time.monotonic()
         self.dymo.pause()
@@ -97,11 +100,6 @@ class Scale:
             if (time.monotonic() - timestamp) > self.timeout:
                 raise RuntimeError("Timed out waiting for data")
         self.dymo.pause()
-
-    def get_scale_data(self):
-        """Read a pulse of SPI data on a pin that corresponds to DYMO scale
-        output protocol (12 bytes of data at about 14KHz), timeout is in seconds
-        """
         # check the scale's state
         self.check_scale()
         bits = [0] * 96   # there are 12 bytes = 96 bits of data
