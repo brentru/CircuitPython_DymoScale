@@ -30,6 +30,7 @@ CircuitPython interface for DYMO scales.
 
 Implementation Notes
 --------------------
+
 **Software and Dependencies:**
 
 * Adafruit CircuitPython firmware for the supported boards:
@@ -38,6 +39,7 @@ Implementation Notes
 
 import time
 from pulseio import PulseIn
+from digitalio import DigitalInOut
 from micropython import const
 
 OUNCES = const(0x0B)   # data in weight is in ounces
@@ -50,13 +52,19 @@ __repo__ = "https://github.com/adafruit/Adafruit_CircuitPython_scale.git"
 class Scale:
     """Interface to a DYMO postal scale.
     """
-    def __init__(self, pin, timeout=1.0):
+    def __init__(self, usb_pin, weight_pin, timeout=1.0):
         """Sets up a DYMO postal scale.
-        :param ~pulseio.PulseIn pin: The digital pin the scale is connected to.
+        :param ~pulseio.PulseIn usb_pin: The usb data pin from the Dymo scale.
+        :param ~digitalio.DigitalInOut weight_pin: The grams/oz pin from the Dymo scale.
         :param double timeout: The timeout, in seconds.
         """
         self.timeout = timeout
-        self.dymo = PulseIn(pin, maxlen=96, idle_state=True)
+        # set up the toggle pin
+        self.toggle_pin = DigitalInOut(weight_pin)
+        self.toggle_pin.switch_to_output()
+        self.toggle_pin.value = 1
+        self.toggle_pin.value = 0
+        self.dymo = PulseIn(usb_pin, maxlen=96, idle_state=True)
         try:
             self.check_scale()
         except RuntimeError:
@@ -119,10 +127,12 @@ class Scale:
         if data_bytes[2] & 0x1:
             self.weight *= -1
         if self.units == OUNCES:
-            # oi no easy way to cast to int8_t
             if data_bytes[4] & 0x80:
                 data_bytes[4] -= 0x100
             self.weight *= 10 ** data_bytes[4]
             self.units = "oz"
         if self.units == GRAMS:
             self.units = "g"
+        # toggle the g/oz pin
+        self.toggle_pin.value = 1
+        self.toggle_pin.value = 0

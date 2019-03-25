@@ -1,8 +1,8 @@
 import board
 from adafruit_dymoscale import Scale
 
-# initialize the scale
-dymo = Scale(board.D3)
+# initialize the scale's USB and g/oz button
+dymo = Scale(board.D3, board.D4)
 
 while True:
     try:
