@@ -127,11 +127,11 @@ class Scale:
         self.weight = data_bytes[5] + (data_bytes[6] << 8)
         if data_bytes[2] & 0x1:
             self.weight *= -1
-            print('Negative number, press the tare button to reset the scale to zero.')
+            print('Tare - press the tare button to reset the scale to zero.')
         if self.units == OUNCES:
             if data_bytes[4] & 0x80:
                 data_bytes[4] -= 0x100
-                print('Negative number, press the tare button to reset the scale to zero.')
+                print('Tare - press the tare button to reset the scale to zero.')
             self.weight *= 10 ** data_bytes[4]
             self.units = "oz"
         if self.units == GRAMS:
