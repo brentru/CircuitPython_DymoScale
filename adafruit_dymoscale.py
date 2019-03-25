@@ -70,12 +70,21 @@ class Scale:
         # the weight of what we're measuring
         self.weight = None
 
-    def toggle_unit_pin(self):
-        """Toggles the units button to prevent auto shut-off.
+    def toggle_unit_pin(self, switch_unit=False):
+        """Toggles the units button on the dymo.
+        :param bool switch_unit: Simulates pressing the unit button.
         """
-        self.units_pin.value = 1
-        time.sleep(2)
-        self.units_pin.value = 0
+        if switch_unit: # press the toggle button once
+            self.units_pin.value = 1
+            time.sleep(2)
+            self.units_pin.value = 0
+            time.sleep(2)
+        else: # toggle and preserve current unit state
+            for toggle in range(2):
+                self.units_pin.value = 1
+                time.sleep(2)
+                self.units_pin.value = 0
+                time.sleep(2)
 
     def check_scale(self):
         """Checks for data from the scale.
